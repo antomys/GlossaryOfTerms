@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Xml;
 using FB2Library;
 
-namespace GlossaryOfTerms;
+namespace DistEdu.GlossaryOfTerms;
 
 public class IoExtensions
 {
