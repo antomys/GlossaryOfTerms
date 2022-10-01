@@ -16,4 +16,10 @@
       <PackageReference Include="MessagePack" Version="2.4.35" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="TestFiles\CSharp.10.in.a.Nutshell.Joseph.Albahari.OReilly.9781098121952.EBooksWorld.ir.fb2" />
+      <None Remove="TestFiles\95242633.fb2" />
+      <None Remove="TestFiles\95155133.fb2" />
+    </ItemGroup>
+
 </Project>

@@ -5,7 +5,7 @@ using FB2Library;
 using FB2Library.Elements;
 using FB2Library.Elements.Poem;
 
-namespace GlossaryOfTerms;
+namespace DistEdu.GlossaryOfTerms;
 
 public sealed class Reader
 {
