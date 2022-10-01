@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using DistEdu.Common;
 using FB2Library;
 using FB2Library.Elements;
 using FB2Library.Elements.Poem;
@@ -174,14 +175,14 @@ public sealed class Reader
         }
     }
     
-    private static void ProcessTitle(TitleItem bodyItem)
+    private static void ProcessTitle(TitleItem? bodyItem)
     {
-        if (bodyItem?.TitleData is null || bodyItem?.TitleData?.Count is 0)
+        if (bodyItem?.TitleData is null || bodyItem.TitleData?.Count is 0)
         {
             return;
         }
         
-        foreach (var title in bodyItem.TitleData)
+        foreach (var title in bodyItem.TitleData!)
         {
             if (title is not ParagraphItem castedTitle)
             {
@@ -286,7 +287,7 @@ public sealed class Reader
         foreach (ref var splitStr in subStr.AsSpan())
         {
             splitStr = splitStr.ToLower();
-            GlossaryOfTerms.AddOrUpdate(splitStr, _ => 1, (s, i) => Interlocked.Increment(ref i));
+            GlossaryOfTerms.AddOrUpdate(splitStr, _ => 1, (_, i) => Interlocked.Increment(ref i));
         }
     }
 }
