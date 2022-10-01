@@ -6,6 +6,6 @@ await Reader.ProcessValues("TestFiles");
 await Task.WhenAll(Reader.WriteCustomFileAsync(), Reader.WriteJsonFileAsync(), Reader.WriteMsgPackFileAsync());
 
 // For csv.
-await Reader.ProcessCsvValues("TestFiles");
+//await Reader.ProcessCsvValues("TestFiles");
 // await Task.WhenAll(Reader.WriteCustomFileAsync(), Reader.WriteJsonFileAsync(), Reader.WriteMsgPackFileAsync());
 // For csv.
