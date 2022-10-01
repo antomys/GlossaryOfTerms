@@ -10,7 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistEdu.BooleanSearch", "DistEdu.BooleanSearch\DistEdu.BooleanSearch.csproj", "{5454353A-C502-465A-B69E-A28F1913DE82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistEdu.Common", "DistEdu.Common\DistEdu.Common.csproj", "{AF450E0E-DC37-482A-917B-F16A66395574}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistEdu.Common", "DistEdu.Common\DistEdu.Common.csproj", "{E02ECD96-61A7-4936-B628-F20900176B4C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,9 +26,9 @@ Global
 		{5454353A-C502-465A-B69E-A28F1913DE82}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5454353A-C502-465A-B69E-A28F1913DE82}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5454353A-C502-465A-B69E-A28F1913DE82}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AF450E0E-DC37-482A-917B-F16A66395574}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AF450E0E-DC37-482A-917B-F16A66395574}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AF450E0E-DC37-482A-917B-F16A66395574}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AF450E0E-DC37-482A-917B-F16A66395574}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E02ECD96-61A7-4936-B628-F20900176B4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E02ECD96-61A7-4936-B628-F20900176B4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E02ECD96-61A7-4936-B628-F20900176B4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E02ECD96-61A7-4936-B628-F20900176B4C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

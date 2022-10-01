@@ -6,7 +6,7 @@ using FB2Library;
 
 namespace DistEdu.Common;
 
-public sealed class IoExtensions
+public static partial class IoExtensions
 {
     public static readonly JsonSerializerOptions SerializerOptions = new()
     {

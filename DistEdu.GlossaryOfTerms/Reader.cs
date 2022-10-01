@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using DistEdu.Common;
 using FB2Library;
@@ -32,9 +31,8 @@ public sealed class Reader
         
         await Task.WhenAll(fb2Files);
     }
-    
-    
-    public static async Task WriteFileV1Async()
+
+    public static async Task WriteCustomFileAsync()
     {
         const string fileNameDir = "Custom.bin";
         
@@ -56,52 +54,12 @@ public sealed class Reader
         }
         Console.WriteLine("Async Write File has completed.");
     }
+
+    public static Task WriteJsonFileAsync() =>
+        GlossaryOfTerms.WriteJsonFileAsync(OutputDirectory, "GlossaryJson");
     
-    public static async Task WriteFileV2Async()
-    {
-        const string fileNameDir = "Serialized.json";
-
-        var file = Path.Combine(OutputDirectory, fileNameDir);
-        
-        Console.WriteLine("Async Write File has started.");
-       
-        if (File.Exists(file))
-        {
-            File.Delete(file);
-        }
-
-        var serializedContent = JsonSerializer.Serialize(GlossaryOfTerms, IoExtensions.SerializerOptions);
-        
-        await using(var outputFile = new StreamWriter(file))
-        {
-            await outputFile.WriteAsync(serializedContent);
-        }
-        
-        Console.WriteLine("Async Write File has completed.");
-    }
-    
-    public static async Task WriteFileV3Async()
-    {
-        const string fileNameDir = "SerializedMsgPack.msgpack";
-        var file = Path.Combine(OutputDirectory, fileNameDir);
-        
-        Console.WriteLine("Async Write File has started.");
-       
-        if (File.Exists(file))
-        {
-            File.Delete(file);
-        }
-
-        var serializedContent = MessagePack.MessagePackSerializer.Serialize(GlossaryOfTerms)!;
-
-        await using (var fs = new FileStream(file, FileMode.Create, FileAccess.Write))
-        {
-            await fs.WriteAsync(serializedContent);
-            
-        }
-        
-        Console.WriteLine("Async Write File has completed.");
-    }
+    public static Task WriteMsgPackFileAsync() =>
+        GlossaryOfTerms.WriteMsgPackFileAsync(OutputDirectory, "GlossaryMsgPack");
 
     private static Task ProcessFb2(FB2File fb2File)
     {
