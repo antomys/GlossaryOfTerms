@@ -4,11 +4,11 @@ using System.Text.Json;
 using System.Xml;
 using FB2Library;
 
-namespace DistEdu.GlossaryOfTerms;
+namespace DistEdu.Common;
 
-public class IoExtensions
+public sealed class IoExtensions
 {
-    internal static readonly JsonSerializerOptions SerializerOptions = new()
+    public static readonly JsonSerializerOptions SerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = true,

@@ -22,4 +22,8 @@
       <None Remove="TestFiles\95155133.fb2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\DistEdu.Common\DistEdu.Common.csproj" />
+    </ItemGroup>
+
 </Project>
