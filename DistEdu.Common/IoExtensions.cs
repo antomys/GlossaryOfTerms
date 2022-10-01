@@ -89,4 +89,24 @@ public static partial class IoExtensions
             return await Task.FromException<FB2File>(ex);
         }
     }
+    
+    public static async Task<Fb2FileWrapper> ReadFb2FilesV3Async(string filePath, int fileIndex)
+    {
+        await using var sourceStream = File.OpenRead(filePath);
+
+        var fb2Reader = new FB2Reader();
+        try
+        {
+            // reading
+            var file = await fb2Reader.ReadAsync(sourceStream, LoadSettings);
+
+            return new Fb2FileWrapper(fileIndex, file, filePath.Split('/')[^1]);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error loading file : {ex.Message}");
+           
+            return await Task.FromException<Fb2FileWrapper>(ex);
+        }
+    }
 }

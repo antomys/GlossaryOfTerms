@@ -31,6 +31,19 @@ public sealed class Reader
         
         await Task.WhenAll(fb2Files);
     }
+    
+    public static async Task ProcessCsvValues(string folderName)
+    {
+        var filesInFolder = IoExtensions.GetFileNames(folderName, "fb2");
+
+        var fb2Files = filesInFolder.Select((file, index) => IoExtensions.ReadFb2FilesV3Async(file, index)
+            .ContinueWith(task => new Fb2CsvProcessor(task.Result).ProcessFb2Async(), TaskContinuationOptions.AttachedToParent))
+            .ToArray();
+        
+        await Task.WhenAll(fb2Files);
+
+        await WriteCustomCsvFileAsync(fb2Files.SelectMany(x => x.Result));
+    }
 
     public static async Task WriteCustomFileAsync()
     {
@@ -53,6 +66,36 @@ public sealed class Reader
             }
         }
         Console.WriteLine("Async Write File has completed.");
+    }
+    
+    private static async Task WriteCustomCsvFileAsync(IEnumerable<FileToken> tokens)
+    {
+        const string fileNameDir = "Custom_csv.csv";
+        
+        var file = Path.Combine(OutputDirectory, fileNameDir);
+
+        Console.WriteLine("Async Write csv File has started.");
+
+        if (File.Exists(file))
+        {
+            File.Delete(file);
+        }
+
+        var index = 0;
+        await using(var outputFile = new StreamWriter(file))
+        {
+            var headers = FileToken.GetHeaders();
+            await outputFile.WriteLineAsync(headers);
+            
+            foreach (var fileToken in tokens)
+            {
+                fileToken.Id = index;
+                Interlocked.Increment(ref index);
+                
+                await outputFile.WriteLineAsync(fileToken.ToString());
+            }
+        }
+        Console.WriteLine("Async Write csv File has completed.");
     }
 
     public static Task WriteJsonFileAsync() =>
