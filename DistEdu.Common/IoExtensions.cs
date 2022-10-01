@@ -8,7 +8,7 @@ namespace DistEdu.Common;
 
 public static partial class IoExtensions
 {
-    public static readonly JsonSerializerOptions SerializerOptions = new()
+    private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = true,
@@ -22,7 +22,7 @@ public static partial class IoExtensions
     
     private static readonly XmlLoadSettings LoadSettings = new(ReaderSettings);
 
-    public static string[] GetFileNames(string folderName, string fileExt)
+    public static IEnumerable<string> GetFileNames(string folderName, string fileExt)
     {
         var projectDirectory = $"{Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)!.Parent!.Parent!.Parent!.FullName}/{folderName}";
 

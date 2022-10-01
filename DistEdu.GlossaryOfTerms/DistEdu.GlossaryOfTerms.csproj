@@ -15,4 +15,8 @@
       <ProjectReference Include="..\DistEdu.Common\DistEdu.Common.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Output" />
+    </ItemGroup>
+
 </Project>

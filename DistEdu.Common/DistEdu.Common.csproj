@@ -12,4 +12,10 @@
         <PackageReference Include="MessagePack" Version="2.4.35" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="IoExtensions.Write.cs">
+        <DependentUpon>IoExtensions.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>
