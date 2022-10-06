@@ -1,39 +1,66 @@
 ﻿using System.Diagnostics;
 using System.Runtime.Serialization.Formatters.Binary;
+using Common;
 using DistEdu.BooleanSearch.DataSource;
 using DistEdu.BooleanSearch.Indexing;
 using DistEdu.BooleanSearch.Searching;
 
 namespace DistEdu.BooleanSearch;
 
-/// <summary>
-///     TODO:
-///     * Save index on disk to restore it on next start. Check index file date and source file modify date and rebuild
-///     index if needed.
-///     * Write unit tests
-///     * Clean up the code.
-///     It's just a example, so I don't want to implement jokers or checking typo in terms or do search query plan
-///     optimizing. It's a path of samurai, endless path.
-/// </summary>
-public class Program
+public sealed class Program
 {
-    public static void Main(string[] args)
+    private static readonly string OutputDirectory = $"{Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)!.Parent!.Parent!.Parent!.FullName}/Output";
+
+    public static async Task Main()
     {
-        // const string Filename = "notebooks_210000.csv";
-        const string Filename = "Custom_csv.csv";
-        /*var arguments = new List<string>() { "--generate", "210000" };
-        args = arguments.ToArray();*/
-        
-        var storage = new BookFileDataSource(Filename);
+        const string filename = "Input/Custom_csv.csv";
+
+        var storage = new BookFileDataSource(filename);
 
         var index = BuildIndex(storage);
+
+        await SaveIndex((InvertedIndex)index);
         
-        UserQueryMode(index, storage);
+        QueryMode(index, storage);
 
         Console.ReadKey();
     }
 
-    private static IIndex BuildIndex(BookFileDataSource storage)
+    private static void QueryMode(IIndex index, IBookDataSource bookDataSource)
+    {
+        while (true)
+        {
+            Console.WriteLine("Please choose query mode. \nTo exit, press Ctrl + C\n");
+            Console.WriteLine("1.Simple query mode\n2.Expression Tree mode.");
+            Console.Write("> ");
+            int.TryParse(Console.ReadLine(), out var number);
+            
+            switch (number)
+            {
+                case 1:
+                {
+                    Console.WriteLine("To exit, write \'break;\'");
+                    SimpleUserQueryMode(index, bookDataSource);
+                    
+                    break;
+                }
+                case 2:
+                {
+                    Console.WriteLine("To exit, write \'break;\'");
+                    EtUserQueryMode(index, bookDataSource);
+                    break;
+                }
+                default:
+                {
+                    Console.WriteLine("Invalid input.Exiting.\nPress any key...");
+                    
+                    break;
+                }
+            }
+        }
+    }
+
+    private static IIndex BuildIndex(IBookDataSource storage)
     {
         Console.WriteLine("Start indexing");
 
@@ -47,7 +74,7 @@ public class Program
         Console.WriteLine($"Indexing is finished in {stopWatch.ElapsedMilliseconds} ms");
 
         Console.WriteLine();
-        Console.WriteLine($"Notebooks: {storage.GetAllBooks().Count}.");
+        Console.WriteLine($"Books lines: {storage.GetAllBooks().Count}.");
         Console.WriteLine($"Inverted index terms size: {index.Size()}.");
         Console.WriteLine($"Inverted index memory size: {GetObjectSize(index)}.");
         Console.WriteLine();
@@ -55,11 +82,26 @@ public class Program
         return index;
     }
 
-    private static void UserQueryMode(IIndex index, BookFileDataSource storage)
+    private static Task SaveIndex(IIndex index)
+    {
+        if (index is not InvertedIndex invertedIndex)
+        {
+            return Task.CompletedTask;
+        }
+        
+        if (Directory.Exists(OutputDirectory) is false)
+        {
+            Directory.CreateDirectory(OutputDirectory);
+        }
+        
+        return Task.WhenAll(invertedIndex.WriteJsonFileAsync(OutputDirectory, nameof(InvertedIndex)), invertedIndex.WriteMsgPackFileAsync(OutputDirectory, nameof(InvertedIndex)));
+    }
+    
+    private static void EtUserQueryMode(IIndex index, IBookDataSource storage)
     {
         Console.CancelKeyPress += CancelHandler;
         var stopWatch = new Stopwatch();
-
+        
         var searcher = new EtSearcher(index, storage);
 
         while (true)
@@ -67,6 +109,50 @@ public class Program
             Console.WriteLine();
             Console.Write("Enter the query: ");
             var query = Console.ReadLine();
+           
+            if (query is "break;")
+            {
+                return;
+            }
+            
+            stopWatch.Reset();
+            stopWatch.Start();
+
+            try
+            {
+                var result = searcher.Search(query);
+
+                stopWatch.Stop();
+
+                PrintResults(result, stopWatch.ElapsedMilliseconds, storage);
+            }
+            catch
+            {
+                Console.WriteLine();
+                Console.WriteLine("Invalid query format");
+                Console.WriteLine();
+            }
+        }
+    }
+    
+    private static void SimpleUserQueryMode(IIndex index, IBookDataSource storage)
+    {
+        Console.CancelKeyPress += CancelHandler;
+        var stopWatch = new Stopwatch();
+
+        var searcher = new SimpleSearcher(index, storage);
+
+        while (true)
+        {
+            Console.WriteLine();
+            Console.Write("Enter the query: ");
+            var query = Console.ReadLine();
+            
+            if (query is "break;")
+            {
+                return;
+            }
+            
             stopWatch.Reset();
             stopWatch.Start();
 
@@ -107,14 +193,14 @@ public class Program
         Console.WriteLine($"Total results: {result.Count}. Search time: {timeMeasure} ms.");
     }
 
-    private static int GetObjectSize(object TestObject)
+    [Obsolete("Obsolete")]
+    private static int GetObjectSize(object testObject)
     {
         var bf = new BinaryFormatter();
         var ms = new MemoryStream();
-        byte[] Array;
-        bf.Serialize(ms, TestObject);
-        Array = ms.ToArray();
-        return Array.Length;
+        bf.Serialize(ms, testObject);
+        var array = ms.ToArray();
+        return array.Length;
     }
 
     private static void CancelHandler(object sender, ConsoleCancelEventArgs args)

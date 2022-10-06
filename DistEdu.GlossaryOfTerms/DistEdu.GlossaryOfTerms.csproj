@@ -12,11 +12,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\DistEdu.Common\DistEdu.Common.csproj" />
+      <Folder Include="Output" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Output" />
+      <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>
 
 </Project>

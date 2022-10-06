@@ -1,16 +1,12 @@
 using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
-using DistEdu.Common;
-using FB2Library;
-using FB2Library.Elements;
-using FB2Library.Elements.Poem;
+using System.Text;
+using Common;
 
 namespace DistEdu.GlossaryOfTerms;
 
 public sealed class Reader
 {
     private static readonly string OutputDirectory = $"{Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)!.Parent!.Parent!.Parent!.FullName}/Output";
-    private static readonly Regex Regex = new(@"[^a-zа-яA-ZА-Я0-9]", RegexOptions.Compiled);
 
     private static readonly ConcurrentDictionary<string, int> GlossaryOfTerms = new();
 
@@ -27,7 +23,7 @@ public sealed class Reader
         var filesInFolder = IoExtensions.GetFileNames(folderName, "fb2");
 
         var fb2Files = filesInFolder.Select(file => IoExtensions.ReadFb2FilesV2Async(file)
-            .ContinueWith(task => ProcessFb2(task.Result), TaskContinuationOptions.AttachedToParent));
+            .ContinueWith(task => Fb2Processor.ProcessFb2(task.Result, GlossaryOfTerms), TaskContinuationOptions.AttachedToParent));
         
         await Task.WhenAll(fb2Files);
     }
@@ -37,12 +33,30 @@ public sealed class Reader
         var filesInFolder = IoExtensions.GetFileNames(folderName, "fb2");
 
         var fb2Files = filesInFolder.Select((file, index) => IoExtensions.ReadFb2FilesV3Async(file, index)
-            .ContinueWith(task => new Fb2CsvProcessor(task.Result).ProcessFb2Async(), TaskContinuationOptions.AttachedToParent))
+            .ContinueWith(task => new Fb2Processor(task.Result).ProcessFb2Async(), TaskContinuationOptions.AttachedToParent))
             .ToArray();
         
         await Task.WhenAll(fb2Files);
 
         await WriteCustomCsvFileAsync(fb2Files.SelectMany(x => x.Result));
+    }
+    
+    public static async Task ProcessMatrixValues(string folderName)
+    {
+        var filesInFolder = IoExtensions.GetFileNames(folderName, "fb2").ToArray();
+
+        var fb2Files = filesInFolder.Select((file, index) => IoExtensions.ReadFb2FilesV3Async(file, index)
+                .ContinueWith(task => new Fb2Processor(task.Result).ProcessFb2WithMatrixAsync(), TaskContinuationOptions.AttachedToParent))
+            .ToArray();
+        
+        await Task.WhenAll(fb2Files);
+
+        var keyValuePairs = fb2Files
+            .SelectMany(task => task.Result.ReverseDictionary<string, string, HashSet<string>>())
+            .GroupBy(keyValuePair => keyValuePair.Key)
+            .ToDictionary(valuePairs => valuePairs.Key, x => x.Select(keyValuePair=> keyValuePair.Value));
+        
+        await WriteMatrixToFileAsync(keyValuePairs);
     }
 
     public static async Task WriteCustomFileAsync()
@@ -74,7 +88,7 @@ public sealed class Reader
         
         var file = Path.Combine(OutputDirectory, fileNameDir);
 
-        Console.WriteLine("Async Write csv File has started.");
+        Console.WriteLine($"Async Write {fileNameDir} File has started.");
 
         if (File.Exists(file))
         {
@@ -89,13 +103,55 @@ public sealed class Reader
             
             foreach (var fileToken in tokens)
             {
+                if (fileToken is null || string.IsNullOrWhiteSpace(fileToken.Token))
+                {
+                    continue;
+                }
+                
                 fileToken.Id = index;
                 Interlocked.Increment(ref index);
                 
                 await outputFile.WriteLineAsync(fileToken.ToString());
             }
         }
-        Console.WriteLine("Async Write csv File has completed.");
+        Console.WriteLine($"Async Write {fileNameDir} File has completed.");
+    }
+    
+    private static async Task WriteMatrixToFileAsync(Dictionary<string,IEnumerable<string>> lexemes)
+    {
+        const string fileNameDir = "Custom_Matrix.csv";
+        
+        var file = Path.Combine(OutputDirectory, fileNameDir);
+
+        Console.WriteLine($"Matrix async Write {fileNameDir} File has started.");
+
+        if (File.Exists(file))
+        {
+            File.Delete(file);
+        }
+
+        var index = 0;
+        await using(var outputFile = new StreamWriter(file))
+        {
+            foreach (var (lexeme, fileNames) in lexemes)
+            {
+                Interlocked.Increment(ref index);
+                
+                var writeString = $"{index};{lexeme};{GetString(fileNames)}";
+                
+                await outputFile.WriteLineAsync(writeString);
+            }
+        }
+        
+        Console.WriteLine($"Matrix async Write {fileNameDir} File has completed.");
+    }
+
+    private static string GetString(IEnumerable<string> values)
+    {
+        var sb = new StringBuilder();
+        sb.AppendJoin(';', values);
+
+        return sb.ToString();
     }
 
     public static Task WriteJsonFileAsync() =>
@@ -103,192 +159,4 @@ public sealed class Reader
     
     public static Task WriteMsgPackFileAsync() =>
         GlossaryOfTerms.WriteMsgPackFileAsync(OutputDirectory, "GlossaryMsgPack");
-
-    private static Task ProcessFb2(FB2File fb2File)
-    {
-        foreach (var body in fb2File.Bodies)
-        {
-            ProcessString(body.Name);
-            ProcessTitle(body.Title);
-            ProcessSections(body.Sections);
-        }
-        
-        return Task.CompletedTask;
-    }
-
-    private static void ProcessSections(List<SectionItem>? sectionItems)
-    {
-        if (sectionItems is null || sectionItems.Count is 0)
-        {
-            return;
-        }
-        
-        foreach (var sectionItem in sectionItems)
-        {
-            ProcessString(sectionItem.ID);
-            ProcessTitle(sectionItem.Title);
-            ProcessEpigraphs(sectionItem.Epigraphs);
-            ProcessSectionItems(sectionItem.Content);
-        }
-    }
-    
-    private static void ProcessSectionItems(List<IFb2TextItem>? sectionItems)
-    {
-        if (sectionItems is null || sectionItems.Count is 0)
-        {
-            return;
-        }
-        
-        foreach (var sectionItem in sectionItems)
-        {
-            switch (sectionItem)
-            {
-                case SectionItem castedSectionItem:
-                    ProcessString(castedSectionItem.ID);
-                    ProcessTitle(castedSectionItem.Title);
-                    ProcessEpigraphs(castedSectionItem.Epigraphs);
-                    ProcessParagraphItem(castedSectionItem.Content);
-                    break;
-
-                case ParagraphItem castedParagraphItem:
-                    ProcessParagraphData(castedParagraphItem.ParagraphData);
-                    break;
-            }
-        }
-    }
-
-    private static void ProcessParagraphItem(List<IFb2TextItem>? sectionItems)
-    {
-        if (sectionItems is null || sectionItems.Count is 0)
-        {
-            return;
-        }
-        
-        foreach (var sectionItem in sectionItems)
-        {
-            if (sectionItem is not ParagraphItem castedParagraphItem)
-            {
-                continue;
-            }
-            
-            ProcessString(castedParagraphItem.ID);
-            ProcessParagraphData(castedParagraphItem.ParagraphData);
-        }
-    }
-    
-    private static void ProcessTitle(TitleItem? bodyItem)
-    {
-        if (bodyItem?.TitleData is null || bodyItem.TitleData?.Count is 0)
-        {
-            return;
-        }
-        
-        foreach (var title in bodyItem.TitleData!)
-        {
-            if (title is not ParagraphItem castedTitle)
-            {
-                continue;
-            }
-            
-            ProcessString(castedTitle.Lang);
-            ProcessString(castedTitle.Style);
-            ProcessString(castedTitle.ID);
-            ProcessString(castedTitle.ToString());
-        }
-    }
-
-    private static void ProcessParagraphData(IList<StyleType>? styleTypes)
-    {
-        if (styleTypes is null || styleTypes.Count is 0)
-        {
-            return;
-        }
-        
-        foreach (var simpleText in styleTypes)
-        {
-            if (simpleText is not SimpleText castedSimpleText)
-            {
-                continue;
-            }
-            
-            ProcessString(castedSimpleText.Text);
-        }
-    }
-    
-    private static void ProcessEpigraphs(IList<EpigraphItem>? epigraphItems)
-    {
-        if (epigraphItems is null || epigraphItems.Count is 0)
-        {
-            return;
-        }
-        
-        foreach (var epigraphItem in epigraphItems)
-        {
-            foreach (var poemItem in epigraphItem.EpigraphData)
-            {
-                if (poemItem is not PoemItem castedPoemItem)
-                {
-                    continue;
-                }
-                
-                ProcessStanzaItems(castedPoemItem.Content);
-            }
-            ProcessTextAuthorItems(epigraphItem.TextAuthors);
-        }
-    }
-    
-    private static void ProcessStanzaItems(IList<IFb2TextItem>? epigraphItems)
-    {
-        if (epigraphItems is null || epigraphItems.Count is 0)
-        {
-            return;
-        }
-        
-        foreach (var stanzaItem in epigraphItems)
-        {
-            if (stanzaItem is not StanzaItem castedStanzaItem)
-            {
-                continue;
-            }
-            
-            foreach (var line in castedStanzaItem.Lines)
-            {
-                ProcessParagraphData(line.ParagraphData);
-            }
-        }
-    }
-    
-    private static void ProcessTextAuthorItems(IList<IFb2TextItem>? epigraphItems)
-    {
-        if (epigraphItems is null || epigraphItems.Count is 0)
-        {
-            return;
-        }
-        
-        foreach (var fb2TextItem in epigraphItems)
-        {
-            if (fb2TextItem is not TextAuthorItem castedTextAuthorItem)
-            {
-                continue;
-            }
-            
-            ProcessParagraphData(castedTextAuthorItem.ParagraphData);
-        }
-    }
-
-    private static void ProcessString(string str)
-    {
-        if (string.IsNullOrEmpty(str))
-        {
-            return;
-        }
-        
-        var subStr = Regex.Split(str);
-
-        foreach (ref var splitStr in subStr.AsSpan())
-        {
-            splitStr = splitStr.ToLower();
-            GlossaryOfTerms.AddOrUpdate(splitStr, _ => 1, (_, i) => Interlocked.Increment(ref i));
-        }
-    }
 }

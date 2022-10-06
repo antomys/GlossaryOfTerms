@@ -1,10 +1,11 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Xml;
 using FB2Library;
 
-namespace DistEdu.Common;
+namespace Common;
 
 public static partial class IoExtensions
 {
@@ -108,5 +109,23 @@ public static partial class IoExtensions
            
             return await Task.FromException<Fb2FileWrapper>(ex);
         }
+    }
+    
+    public static Dictionary<T2, T1> ReverseDictionary<T1, T2, TEnumerable>(this Dictionary<T1, TEnumerable> source) where TEnumerable : IEnumerable<T2> 
+        where T2 : notnull 
+        where T1 : notnull
+    {
+        return source
+            .SelectMany(e => e.Value.Select(s => new { Key = s, Value = e.Key }))
+            .ToDictionary(x => x.Key, x => x.Value);
+    }
+    
+    public static Dictionary<T2, T1> ReverseDictionary<T1, T2, TEnumerable>(this ConcurrentDictionary<T1, TEnumerable> source) where TEnumerable : IEnumerable<T2> 
+        where T2 : notnull 
+        where T1 : notnull
+    {
+        return source
+            .SelectMany(e => e.Value.Select(s => new { Key = s, Value = e.Key }))
+            .ToDictionary(x => x.Key, x => x.Value);
     }
 }

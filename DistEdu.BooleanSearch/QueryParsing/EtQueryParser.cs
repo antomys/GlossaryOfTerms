@@ -110,11 +110,17 @@ public class EtQueryParser
         return ExpressionTreeNode.CreateTerm(_tokenReader.Term);
     }
 
-    private ExpressionTreeNode OptimizeTree(ExpressionTreeNode node)
+    private ExpressionTreeNode OptimizeTree(ExpressionTreeNode? node)
     {
-        if (node == null) return null;
+        if (node is null)
+        {
+            return null;
+        }
 
-        if (node.Operation == "ALL" || node.Operation == "ZERO") return node;
+        if (node.Operation is "ALL" or "ZERO")
+        {
+            return node;
+        }
 
         var count = 0;
         node = OptimizeTreeInternal(node, ref count);
@@ -128,9 +134,12 @@ public class EtQueryParser
         return node;
     }
 
-    private ExpressionTreeNode OptimizeTreeInternal(ExpressionTreeNode node, ref int count)
+    private ExpressionTreeNode OptimizeTreeInternal(ExpressionTreeNode? node, ref int count)
     {
-        if (node == null) return null;
+        if (node is null)
+        {
+            return null;
+        }
 
         foreach (var action in _optimizeActions) node = action(node, ref count);
 
@@ -144,18 +153,23 @@ public class EtQueryParser
     ///     AND(NOT,NOT) -> NOT(OR)
     /// </summary>
     /// <param name="node"></param>
-    private static ExpressionTreeNode TwoNotInAndRule(ExpressionTreeNode node, ref int count)
+    private static ExpressionTreeNode TwoNotInAndRule(ExpressionTreeNode? node, ref int count)
     {
-        if (node == null) return null;
-
-        if (node.Operation == "AND" && node.Child1.Operation == "NOT" && node.Child2.Operation == "NOT")
+        if (node is null)
         {
-            var andChild = ExpressionTreeNode.CreateOr(node.Child1.Child1, node.Child2.Child1);
-
-            node = ExpressionTreeNode.CreateNot(andChild);
-
-            count++;
+            return null;
         }
+
+        if (node.Operation != "AND" || node.Child1.Operation != "NOT" || node.Child2.Operation != "NOT")
+        {
+            return node;
+        }
+        
+        var andChild = ExpressionTreeNode.CreateOr(node.Child1.Child1, node.Child2.Child1);
+
+        node = ExpressionTreeNode.CreateNot(andChild);
+
+        count++;
 
         return node;
     }
@@ -165,18 +179,21 @@ public class EtQueryParser
     ///     It helps execute note more faster.
     /// </summary>
     /// <param name="node"></param>
-    private static ExpressionTreeNode ReplaceFirstNotInAndRule(ExpressionTreeNode node, ref int count)
+    private static ExpressionTreeNode ReplaceFirstNotInAndRule(ExpressionTreeNode? node, ref int count)
     {
-        if (node == null) return null;
-
-        if (node.Operation == "AND" && node.Child1.Operation == "NOT" && node.Child2.Operation != "NOT")
+        if (node is null)
         {
-            var child = node.Child1;
-            node.Child1 = node.Child2;
-            node.Child2 = child;
-
-            count++;
+            return null;
         }
+
+        if (node.Operation != "AND" || node.Child1.Operation != "NOT" || node.Child2.Operation == "NOT")
+        {
+            return node;
+        }
+        
+        (node.Child1, node.Child2) = (node.Child2, node.Child1);
+
+        count++;
 
         return node;
     }
@@ -186,19 +203,23 @@ public class EtQueryParser
     ///     OR(NOT, NOT) -> NOT(term) - if terms are equal
     /// </summary>
     /// <param name="node"></param>
-    private static ExpressionTreeNode TwoNotInOrRule(ExpressionTreeNode node, ref int count)
+    private static ExpressionTreeNode TwoNotInOrRule(ExpressionTreeNode? node, ref int count)
     {
-        if (node == null) return null;
-
-        if (node.Operation == "OR" && node.Child1.Operation == "NOT" && node.Child2.Operation == "NOT")
+        if (node is null)
         {
-            if (node.Child1.Child1.Term == node.Child2.Child1.Term)
-                node = ExpressionTreeNode.CreateNot(node.Child1.Child1);
-            else
-                node = ExpressionTreeNode.CreateAllNode();
-
-            count++;
+            return null;
         }
+
+        if (node.Operation != "OR" || node.Child1.Operation != "NOT" || node.Child2.Operation != "NOT")
+        {
+            return node;
+        }
+       
+        node = node.Child1.Child1.Term == node.Child2.Child1.Term 
+            ? ExpressionTreeNode.CreateNot(node.Child1.Child1) 
+            : ExpressionTreeNode.CreateAllNode();
+
+        count++;
 
         return node;
     }
@@ -209,22 +230,29 @@ public class EtQueryParser
     ///     NOT(ALL) -> ZERO
     /// </summary>
     /// <returns></returns>
-    private static ExpressionTreeNode HandleAllNode(ExpressionTreeNode node, ref int count)
+    private static ExpressionTreeNode HandleAllNode(ExpressionTreeNode? node, ref int count)
     {
-        if (node == null) return null;
-
-        if (node.Child1?.Operation == "ALL" || node.Child2?.Operation == "ALL")
+        if (node is null)
         {
-            var otherNode = node.Child1.Operation == "ALL" ? node.Child2 : node.Child1;
-
-            if (node.Operation == "AND")
-                node = otherNode;
-            else if (node.Operation == "OR")
-                node = ExpressionTreeNode.CreateAllNode();
-            else if (node.Operation == "NOT") node = ExpressionTreeNode.CreateZeroNode();
-
-            count++;
+            return null;
         }
+
+        if (node.Child1?.Operation != "ALL" && node.Child2?.Operation != "ALL")
+        {
+            return node;
+        }
+       
+        var otherNode = node.Child1.Operation == "ALL" ? node.Child2 : node.Child1;
+
+        node = node.Operation switch
+        {
+            "AND" => otherNode,
+            "OR" => ExpressionTreeNode.CreateAllNode(),
+            "NOT" => ExpressionTreeNode.CreateZeroNode(),
+            _ => node
+        };
+
+        count++;
 
         return node;
     }
@@ -235,22 +263,29 @@ public class EtQueryParser
     ///     NOT(ZERO) -> ALL
     /// </summary>
     /// <returns></returns>
-    private static ExpressionTreeNode HandleZeroNode(ExpressionTreeNode node, ref int count)
+    private static ExpressionTreeNode HandleZeroNode(ExpressionTreeNode? node, ref int count)
     {
-        if (node == null) return null;
-
-        if (node.Child1?.Operation == "ZERO" || node.Child2?.Operation == "ZERO")
+        if (node is null)
         {
-            var otherNode = node.Child1.Operation == "ZERO" ? node.Child2 : node.Child1;
-
-            if (node.Operation == "AND")
-                node = ExpressionTreeNode.CreateAllNode();
-            else if (node.Operation == "OR")
-                node = otherNode;
-            else if (node.Operation == "NOT") node = ExpressionTreeNode.CreateAllNode();
-
-            count++;
+            return null;
         }
+
+        if (node.Child1?.Operation != "ZERO" && node.Child2?.Operation != "ZERO")
+        {
+            return node;
+        }
+        
+        var otherNode = node.Child1.Operation == "ZERO" ? node.Child2 : node.Child1;
+
+        node = node.Operation switch
+        {
+            "AND" => ExpressionTreeNode.CreateAllNode(),
+            "OR" => otherNode,
+            "NOT" => ExpressionTreeNode.CreateAllNode(),
+            _ => node
+        };
+
+        count++;
 
         return node;
     }

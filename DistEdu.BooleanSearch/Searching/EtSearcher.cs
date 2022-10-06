@@ -4,7 +4,7 @@ using DistEdu.BooleanSearch.QueryParsing;
 
 namespace DistEdu.BooleanSearch.Searching;
 
-public class EtSearcher
+public sealed class EtSearcher
 {
     private readonly IBookDataSource _dataSource;
     private readonly IIndex _index;
@@ -25,33 +25,28 @@ public class EtSearcher
 
     private List<int> SearchInTree(ExpressionTreeNode node, bool notCompareWithAll = false)
     {
-        if (node == null) throw new Exception("Invalid expression tree");
-
-        if (!string.IsNullOrEmpty(node.Term)) return _index.Find(node.Term);
-
-        var result = new List<int>();
-
-        if (node.Operation == "AND")
+        if (node is null)
         {
-            if (node.Child2.Operation == "NOT")
-                return SearchInTree(node.Child1).Except(SearchInTree(node.Child2, true)).ToList();
-
-            return SearchInTree(node.Child1).Intersect(SearchInTree(node.Child2)).ToList();
+            throw new Exception("Invalid expression tree");
         }
 
-        if (node.Operation == "OR") return SearchInTree(node.Child1).Concat(SearchInTree(node.Child2)).ToList();
-
-        if (node.Operation == "NOT")
+        if (string.IsNullOrEmpty(node.Term) is false)
         {
-            if (notCompareWithAll) return SearchInTree(node.Child1).ToList();
-
-            return _dataSource.GetAllIds().Except(SearchInTree(node.Child1)).ToList();
+            return _index.Find(node.Term);
         }
 
-        if (node.Operation == "ALL") return _dataSource.GetAllIds();
-
-        if (node.Operation == "ZERO") return new List<int>();
-
-        throw new Exception("Invalid expression tree");
+        return node.Operation switch
+        {
+            "AND" => node.Child2.Operation is "NOT"
+                ? SearchInTree(node.Child1).Except(SearchInTree(node.Child2, true)).ToList()
+                : SearchInTree(node.Child1).Intersect(SearchInTree(node.Child2)).ToList(),
+            "OR" => SearchInTree(node.Child1).Concat(SearchInTree(node.Child2)).ToList(),
+            "NOT" => notCompareWithAll
+                ? SearchInTree(node.Child1).ToList()
+                : _dataSource.GetAllIds().Except(SearchInTree(node.Child1)).ToList(),
+            "ALL" => _dataSource.GetAllIds(),
+            "ZERO" => new List<int>(),
+            _ => throw new Exception("Invalid expression tree")
+        };
     }
 }

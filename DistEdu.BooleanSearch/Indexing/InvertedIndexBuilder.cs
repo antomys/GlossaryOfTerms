@@ -11,14 +11,12 @@ public class InvertedIndexBuilder : IInvertedIndexBuilder
     {
         var index = new InvertedIndex();
 
-        string line;
-
         var notebooks = dataSource.GetAllBooks();
 
         foreach (var item in notebooks)
         {
             // We look on brand and model same way, just because we don't need any ranging yet
-            line = item.Value.FileName + "," + item.Value.Token;
+            var line = item.Value.FileName + "," + item.Value.Token;
 
             var termStart = 0;
 
@@ -37,12 +35,14 @@ public class InvertedIndexBuilder : IInvertedIndexBuilder
                     termStart = 0;
                 }
 
-                if (++i == line.Length)
+                if (++i != line.Length)
                 {
-                    if (termStart > 0) index.Add(line.Substring(i - termStart, termStart).ToLower(), item.Key);
-
-                    break;
+                    continue;
                 }
+                
+                if (termStart > 0) index.Add(line.Substring(i - termStart, termStart).ToLower(), item.Key);
+
+                break;
             }
         }
 

@@ -1,6 +1,6 @@
 using FB2Library;
 
-namespace DistEdu.Common;
+namespace Common;
 
 public sealed class Fb2FileWrapper
 {

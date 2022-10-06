@@ -1,11 +1,14 @@
-﻿namespace DistEdu.BooleanSearch.Indexing;
+﻿using MessagePack;
+
+namespace DistEdu.BooleanSearch.Indexing;
 
 /// <summary>
 ///     Serializable - just for memory statistics
 ///     and for potential saving in file.
 /// </summary>
 [Serializable]
-public class InvertedIndex : Dictionary<string, HashSet<int>>, IIndex
+[MessagePackObject]
+public sealed class InvertedIndex : Dictionary<string, HashSet<int>>, IIndex
 {
     public List<int> Find(string text)
     {

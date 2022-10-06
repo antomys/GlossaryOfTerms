@@ -1,4 +1,4 @@
-namespace DistEdu.Common;
+namespace Common;
 
 public sealed class FileToken
 {

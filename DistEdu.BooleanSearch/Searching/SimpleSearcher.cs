@@ -4,7 +4,7 @@ using DistEdu.BooleanSearch.QueryParsing;
 
 namespace DistEdu.BooleanSearch.Searching;
 
-public class SimpleSearcher
+public sealed class SimpleSearcher
 {
     private readonly IBookDataSource _dataSource;
     private readonly IIndex _index;
@@ -20,41 +20,51 @@ public class SimpleSearcher
         var parser = new SimpleQueryParser(query);
         var parsedQuery = parser.Parse();
 
-        if (parsedQuery.Length == 1) return _index.Find(parsedQuery[0]);
+        if (parsedQuery.Length is 1) return _index.Find(parsedQuery[0]);
 
         var i = 0;
         var result = new List<int>();
         while (i < parsedQuery.Length)
         {
-            if (i == 0)
+            if (i is 0)
             {
-                var invertedFirstArg = parsedQuery[i] == "NOT";
+                var invertedFirstArg = parsedQuery[i] is "NOT";
 
                 i = invertedFirstArg ? ++i : i;
 
-                if (invertedFirstArg)
-                    result = _dataSource.GetAllIds().Except(_index.Find(parsedQuery[i++])).ToList();
-                else
-                    result = _index.Find(parsedQuery[i++]);
+                result = invertedFirstArg 
+                    ? _dataSource
+                        .GetAllIds()
+                        .Except(_index.Find(parsedQuery[i++]))
+                        .ToList() 
+                    : _index.Find(parsedQuery[i++]);
             }
 
-            if (parsedQuery[i] == "AND")
+            switch (parsedQuery[i])
             {
-                i++;
+                case "AND":
+                    i++;
 
-                if (parsedQuery[i] == "NOT")
-                    result = result.Except(_index.Find(parsedQuery[++i])).ToList();
-                else
-                    result = result.Intersect(_index.Find(parsedQuery[i])).ToList();
-            }
-            else if (parsedQuery[i] == "OR")
-            {
-                i++;
+                    result = parsedQuery[i] is "NOT"
+                        ? result
+                            .Except(_index.Find(parsedQuery[++i]))
+                            .ToList() 
+                        : result
+                            .Intersect(_index.Find(parsedQuery[i]))
+                            .ToList();
+                    break;
+                case "OR":
+                    i++;
 
-                if (parsedQuery[i] == "NOT")
-                    result = result.Concat(_dataSource.GetAllIds().Except(_index.Find(parsedQuery[++i]))).ToList();
-                else
-                    result = result.Concat(_index.Find(parsedQuery[i])).ToList();
+                    result = parsedQuery[i] is "NOT" 
+                        ? result
+                            .Concat(_dataSource.GetAllIds()
+                                .Except(_index.Find(parsedQuery[++i])))
+                            .ToList() 
+                        : result
+                            .Concat(_index.Find(parsedQuery[i]))
+                            .ToList();
+                    break;
             }
 
             i++;

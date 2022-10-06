@@ -3,7 +3,7 @@
 public static class SearchOption
 {
     /// <summary>
-    ///     Symbols what can be in notebooks descriptions.
+    ///     Symbols what can be in book descriptions.
     /// </summary>
     public static readonly char[] AcceptableSymbols = { '-', '/', '.' };
 }

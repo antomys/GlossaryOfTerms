@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace DistEdu.Common;
+namespace Common;
 
 public static partial class IoExtensions
 {

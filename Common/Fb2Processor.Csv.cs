@@ -3,9 +3,9 @@ using FB2Library;
 using FB2Library.Elements;
 using FB2Library.Elements.Poem;
 
-namespace DistEdu.Common;
+namespace Common;
 
-public sealed class Fb2CsvProcessor
+public sealed partial class Fb2Processor
 {
     private readonly string _fileName;
     private readonly int _fileId;
@@ -13,7 +13,7 @@ public sealed class Fb2CsvProcessor
 
     private readonly ConcurrentBag<FileToken> _tokens = new();
 
-    public Fb2CsvProcessor(Fb2FileWrapper fb2FileWrapper)
+    public Fb2Processor(Fb2FileWrapper fb2FileWrapper)
     {
         _fileId = fb2FileWrapper.FileIndex;
         _fileName = fb2FileWrapper.FileName;
@@ -201,12 +201,12 @@ public sealed class Fb2CsvProcessor
     
     private void ProcessString(int bodyId, int sectionId, int sectionItemId, string str)
     {
-        if (string.IsNullOrEmpty(str))
+        if (string.IsNullOrWhiteSpace(str))
         {
             return;
         }
 
-        var token = new FileToken(_fileName, _fileId, bodyId, sectionId, sectionItemId, str);
+        var token = new FileToken(_fileName, _fileId, bodyId, sectionId, sectionItemId, str.TrimEnd());
 
         _tokens.Add(token);
     }

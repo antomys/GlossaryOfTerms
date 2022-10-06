@@ -8,5 +8,5 @@ public enum Token
     Not,
     OpenBracket,
     CloseBracket,
-    EOL
+    EOL,
 }

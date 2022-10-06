@@ -7,7 +7,7 @@ namespace DistEdu.BooleanSearch.QueryParsing;
 ///     Return just a list with terms and operands together.
 ///     Don't understand brackets.
 /// </summary>
-public class SimpleQueryParser
+public sealed class SimpleQueryParser
 {
     private readonly TokenReader _tokenReader;
 
@@ -35,30 +35,34 @@ public class SimpleQueryParser
 
             if (waitingTermOrNot)
             {
-                if (_tokenReader.Token == Token.Term)
+                switch (_tokenReader.Token)
                 {
-                    result.Add(_tokenReader.Term);
+                    case Token.Term:
+                        result.Add(_tokenReader.Term);
 
-                    waitingTermOrNot = false;
-                    waitingOperation = true;
-                }
-                else if (_tokenReader.Token == Token.Not)
-                {
-                    result.Add("NOT");
-                }
-                else
-                {
-                    throw new Exception("Invalid search string format");
+                        waitingTermOrNot = false;
+                        waitingOperation = true;
+                        break;
+                    case Token.Not:
+                        result.Add("NOT");
+                        break;
+                    default:
+                        throw new Exception("Invalid search string format");
                 }
             }
             else if (waitingOperation)
             {
-                if (_tokenReader.Token == Token.And)
-                    result.Add("AND");
-                else if (_tokenReader.Token == Token.Or)
-                    result.Add("OR");
-                else
-                    throw new Exception("Invalid search string format");
+                switch (_tokenReader.Token)
+                {
+                    case Token.And:
+                        result.Add("AND");
+                        break;
+                    case Token.Or:
+                        result.Add("OR");
+                        break;
+                    default:
+                        throw new Exception("Invalid search string format");
+                }
 
                 waitingTermOrNot = true;
                 waitingOperation = false;

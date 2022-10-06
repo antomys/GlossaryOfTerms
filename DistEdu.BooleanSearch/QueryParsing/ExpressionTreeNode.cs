@@ -3,7 +3,7 @@
 namespace DistEdu.BooleanSearch.QueryParsing;
 
 [DebuggerDisplay("{string.IsNullOrEmpty(Term) ? Operation : Term}")]
-public class ExpressionTreeNode
+public sealed class ExpressionTreeNode
 {
     public string Operation { get; set; }
 
