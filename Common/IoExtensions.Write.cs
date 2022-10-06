@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 
 namespace Common;
@@ -21,7 +22,7 @@ public static partial class IoExtensions
 
         var serializedContent = JsonSerializer.Serialize(value, SerializerOptions);
         
-        await using(var outputFile = new StreamWriter(file))
+        await using(var outputFile = new StreamWriter(file, append: false, encoding: Encoding.UTF8))
         {
             await outputFile.WriteAsync(serializedContent);
         }

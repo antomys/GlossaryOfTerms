@@ -51,12 +51,20 @@ public sealed class Reader
         
         await Task.WhenAll(fb2Files);
 
-        var keyValuePairs = fb2Files
-            .SelectMany(task => task.Result.ReverseDictionary<string, string, HashSet<string>>())
+        var tuples = fb2Files
+            .Select(task => (task.Result.Keys, task.Result))
+            .ToArray();
+
+        var keys = tuples
+            .SelectMany(valueTuple => valueTuple.Keys)
+            .ToArray();
+
+        var dictionary = tuples
+            .SelectMany(valueTuple=> valueTuple.Result.ReverseDictionary<string, string, HashSet<string>>())
             .GroupBy(keyValuePair => keyValuePair.Key)
             .ToDictionary(valuePairs => valuePairs.Key, x => x.Select(keyValuePair=> keyValuePair.Value));
         
-        await WriteMatrixToFileAsync(keyValuePairs);
+        await WriteMatrixToFileV2Async(keys, dictionary);
     }
 
     public static async Task WriteCustomFileAsync()
@@ -72,7 +80,7 @@ public sealed class Reader
             File.Delete(file);
         }
 
-        await using(var outputFile = new StreamWriter(file))
+        await using(var outputFile = new StreamWriter(file, append: false, encoding: Encoding.UTF8))
         {
             foreach (var item in GlossaryOfTerms)
             {
@@ -96,7 +104,7 @@ public sealed class Reader
         }
 
         var index = 0;
-        await using(var outputFile = new StreamWriter(file))
+        await using(var outputFile = new StreamWriter(file, append: false, encoding: Encoding.UTF8))
         {
             var headers = FileToken.GetHeaders();
             await outputFile.WriteLineAsync(headers);
@@ -131,7 +139,7 @@ public sealed class Reader
         }
 
         var index = 0;
-        await using(var outputFile = new StreamWriter(file))
+        await using(var outputFile = new StreamWriter(file, append: false, encoding: Encoding.UTF8))
         {
             foreach (var (lexeme, fileNames) in lexemes)
             {
@@ -145,8 +153,61 @@ public sealed class Reader
         
         Console.WriteLine($"Matrix async Write {fileNameDir} File has completed.");
     }
+    
+    private static async Task WriteMatrixToFileV2Async(
+        IReadOnlyList<string> keys,
+        Dictionary<string, IEnumerable<string>> lexemes)
+    {
+        const string fileNameDir = "Custom_Matrix.csv";
+        
+        var file = Path.Combine(OutputDirectory, fileNameDir);
 
-    private static string GetString(IEnumerable<string> values)
+        Console.WriteLine($"Matrix async Write {fileNameDir} File has started.");
+
+        if (File.Exists(file))
+        {
+            File.Delete(file);
+        }
+
+        var index = 0;
+        await using(var outputFile = new StreamWriter(file, append: false, encoding: Encoding.UTF8))
+        {
+            var headers = $"Id;Lexeme;{GetString(keys)}";
+            await outputFile.WriteLineAsync(headers);
+            
+            foreach (var (lexeme, fileNames) in lexemes)
+            {
+                Interlocked.Increment(ref index);
+                
+                var writeString = $"{index};{lexeme};{GetMatrix(keys, fileNames.ToArray())}";
+                
+                await outputFile.WriteLineAsync(writeString);
+            }
+        }
+        
+        Console.WriteLine($"Matrix async Write {fileNameDir} File has completed.");
+    }
+
+    private static string GetMatrix(IReadOnlyList<string> keys, string[] fileNames)
+    {
+        var array = new int[keys.Count];
+
+        for(var i = 0; i < keys.Count; i++)
+        {
+            if (fileNames.Contains(keys[i]))
+            {
+                array[i] = 1;
+            }
+            else
+            {
+                array[i] = 0;
+            }
+        }
+
+        return GetString(array);
+    }
+
+    private static string GetString<T>(IEnumerable<T> values)
     {
         var sb = new StringBuilder();
         sb.AppendJoin(';', values);

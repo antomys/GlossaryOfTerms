@@ -19,8 +19,19 @@ public sealed class Program
 
         var index = BuildIndex(storage);
 
-        await SaveIndex((InvertedIndex)index);
-        
+        Console.WriteLine("Save? y?");
+        Console.Write("> ");
+       
+        if (Console.ReadKey().Key is ConsoleKey.Y)
+        {
+            Console.WriteLine();
+            await SaveIndex((InvertedIndex)index);   
+        }
+        else
+        {
+            Console.WriteLine("Skipping saving");
+        }
+
         QueryMode(index, storage);
 
         Console.ReadKey();
