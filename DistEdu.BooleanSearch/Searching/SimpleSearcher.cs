@@ -1,21 +1,20 @@
-﻿using DistEdu.BooleanSearch.DataSource;
-using DistEdu.BooleanSearch.Indexing;
-using DistEdu.BooleanSearch.QueryParsing;
+﻿using DistEdu.BooleanSearch.QueryParsing;
+using DistEdu.Index.Interfaces;
 
 namespace DistEdu.BooleanSearch.Searching;
 
 public sealed class SimpleSearcher
 {
-    private readonly IBookDataSource _dataSource;
+    private readonly string[] _fileNames;
     private readonly IIndex _index;
 
-    public SimpleSearcher(IIndex index, IBookDataSource dataSource)
+    public SimpleSearcher(IIndex index, string[] fileNames)
     {
         _index = index;
-        _dataSource = dataSource;
+        _fileNames = fileNames;
     }
 
-    public List<int> Search(string query)
+    public List<string> Search(string query)
     {
         var parser = new SimpleQueryParser(query);
         var parsedQuery = parser.Parse();
@@ -23,7 +22,7 @@ public sealed class SimpleSearcher
         if (parsedQuery.Length is 1) return _index.Find(parsedQuery[0]);
 
         var i = 0;
-        var result = new List<int>();
+        var result = new List<string>();
         while (i < parsedQuery.Length)
         {
             if (i is 0)
@@ -32,11 +31,10 @@ public sealed class SimpleSearcher
 
                 i = invertedFirstArg ? ++i : i;
 
-                result = invertedFirstArg 
-                    ? _dataSource
-                        .GetAllIds()
+                result = invertedFirstArg
+                    ? _fileNames
                         .Except(_index.Find(parsedQuery[i++]))
-                        .ToList() 
+                        .ToList()
                     : _index.Find(parsedQuery[i++]);
             }
 
@@ -48,7 +46,7 @@ public sealed class SimpleSearcher
                     result = parsedQuery[i] is "NOT"
                         ? result
                             .Except(_index.Find(parsedQuery[++i]))
-                            .ToList() 
+                            .ToList()
                         : result
                             .Intersect(_index.Find(parsedQuery[i]))
                             .ToList();
@@ -56,11 +54,11 @@ public sealed class SimpleSearcher
                 case "OR":
                     i++;
 
-                    result = parsedQuery[i] is "NOT" 
+                    result = parsedQuery[i] is "NOT"
                         ? result
-                            .Concat(_dataSource.GetAllIds()
+                            .Concat(_fileNames
                                 .Except(_index.Find(parsedQuery[++i])))
-                            .ToList() 
+                            .ToList()
                         : result
                             .Concat(_index.Find(parsedQuery[i]))
                             .ToList();

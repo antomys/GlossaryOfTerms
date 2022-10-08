@@ -3,10 +3,12 @@
 public enum Token
 {
     Term,
-    And,
-    Or,
-    Not,
-    OpenBracket,
-    CloseBracket,
-    EOL,
+    And = '&',
+    Or = '|',
+    Not = '!',
+    OpenBracket = '(',
+    CloseBracket = ')',
+    Eol,
+    All,
+    Zero
 }

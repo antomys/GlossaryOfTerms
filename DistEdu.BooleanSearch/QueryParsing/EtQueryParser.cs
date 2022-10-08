@@ -2,7 +2,7 @@
 
 namespace DistEdu.BooleanSearch.QueryParsing;
 
-public class EtQueryParser
+public sealed class EtQueryParser
 {
     /// <summary>
     ///     Functions to optimize expression query for faster searcher.
@@ -18,17 +18,27 @@ public class EtQueryParser
             HandleZeroNode
         };
 
-    private TokenReader _tokenReader;
+    private readonly TokenReader _tokenReader;
 
-    public ExpressionTreeNode Parse(string query)
+    private EtQueryParser(TokenReader tokenReader)
     {
-        _tokenReader = new TokenReader(query);
+        _tokenReader = tokenReader;
+    }
 
+    public static EtQueryParser CreateInstance(string query)
+    {
+        var tokenReader = new TokenReader(query);
+
+        return new EtQueryParser(tokenReader);
+    }
+
+    public ExpressionTreeNode Parse()
+    {
         _tokenReader.NextToken();
 
         var result = ParseOr();
 
-        if (_tokenReader.Token != Token.EOL) throw new Exception("Invalid search string format");
+        if (_tokenReader.Token is not Token.Eol) throw new Exception("Invalid search string format");
 
         result = OptimizeTree(result);
 
@@ -39,7 +49,7 @@ public class EtQueryParser
     {
         var node = ParseAnd();
 
-        if (_tokenReader.Token != Token.Or) return node;
+        if (_tokenReader.Token is not Token.Or) return node;
 
         _tokenReader.NextToken();
 
@@ -48,7 +58,7 @@ public class EtQueryParser
 
         while (true)
         {
-            if (_tokenReader.Token != Token.Or) return root;
+            if (_tokenReader.Token is not Token.Or) return root;
 
             _tokenReader.NextToken();
 
@@ -66,7 +76,7 @@ public class EtQueryParser
 
         _tokenReader.NextToken();
 
-        if (_tokenReader.Token != Token.And) return node;
+        if (_tokenReader.Token is not Token.And) return node;
 
         _tokenReader.NextToken();
 
@@ -77,7 +87,7 @@ public class EtQueryParser
 
         while (true)
         {
-            if (_tokenReader.Token != Token.And) return root;
+            if (_tokenReader.Token is not Token.And) return root;
 
             _tokenReader.NextToken();
 
@@ -94,7 +104,7 @@ public class EtQueryParser
 
     private ExpressionTreeNode ParseNot()
     {
-        if (_tokenReader.Token != Token.Not) return ParseTerm();
+        if (_tokenReader.Token is not Token.Not) return ParseTerm();
 
         _tokenReader.NextToken();
 
@@ -105,27 +115,21 @@ public class EtQueryParser
 
     private ExpressionTreeNode ParseTerm()
     {
-        if (_tokenReader.Token != Token.Term) throw new Exception("Invalid search string format");
+        if (_tokenReader.Token is not Token.Term) throw new Exception("Invalid search string format");
 
         return ExpressionTreeNode.CreateTerm(_tokenReader.Term);
     }
 
     private ExpressionTreeNode OptimizeTree(ExpressionTreeNode? node)
     {
-        if (node is null)
-        {
-            return null;
-        }
+        if (node is null) return null;
 
-        if (node.Operation is "ALL" or "ZERO")
-        {
-            return node;
-        }
+        if (node.Operation is "ALL" or "ZERO") return node;
 
         var count = 0;
         node = OptimizeTreeInternal(node, ref count);
 
-        while (count != 0)
+        while (count is not 0)
         {
             count = 0;
             node = OptimizeTreeInternal(node, ref count);
@@ -136,10 +140,7 @@ public class EtQueryParser
 
     private ExpressionTreeNode OptimizeTreeInternal(ExpressionTreeNode? node, ref int count)
     {
-        if (node is null)
-        {
-            return null;
-        }
+        if (node is null) return null;
 
         foreach (var action in _optimizeActions) node = action(node, ref count);
 
@@ -155,16 +156,11 @@ public class EtQueryParser
     /// <param name="node"></param>
     private static ExpressionTreeNode TwoNotInAndRule(ExpressionTreeNode? node, ref int count)
     {
-        if (node is null)
-        {
-            return null;
-        }
+        if (node is null) return null;
 
-        if (node.Operation != "AND" || node.Child1.Operation != "NOT" || node.Child2.Operation != "NOT")
-        {
-            return node;
-        }
-        
+        if (node.Operation is not "AND" || node.Child1.Operation is not "NOT" ||
+            node.Child2.Operation is not "NOT") return node;
+
         var andChild = ExpressionTreeNode.CreateOr(node.Child1.Child1, node.Child2.Child1);
 
         node = ExpressionTreeNode.CreateNot(andChild);
@@ -181,16 +177,11 @@ public class EtQueryParser
     /// <param name="node"></param>
     private static ExpressionTreeNode ReplaceFirstNotInAndRule(ExpressionTreeNode? node, ref int count)
     {
-        if (node is null)
-        {
-            return null;
-        }
+        if (node is null) return null;
 
-        if (node.Operation != "AND" || node.Child1.Operation != "NOT" || node.Child2.Operation == "NOT")
-        {
-            return node;
-        }
-        
+        if (node.Operation is not "AND" || node.Child1.Operation is not "NOT" ||
+            node.Child2.Operation == "NOT") return node;
+
         (node.Child1, node.Child2) = (node.Child2, node.Child1);
 
         count++;
@@ -205,18 +196,13 @@ public class EtQueryParser
     /// <param name="node"></param>
     private static ExpressionTreeNode TwoNotInOrRule(ExpressionTreeNode? node, ref int count)
     {
-        if (node is null)
-        {
-            return null;
-        }
+        if (node is null) return null;
 
-        if (node.Operation != "OR" || node.Child1.Operation != "NOT" || node.Child2.Operation != "NOT")
-        {
-            return node;
-        }
-       
-        node = node.Child1.Child1.Term == node.Child2.Child1.Term 
-            ? ExpressionTreeNode.CreateNot(node.Child1.Child1) 
+        if (node.Operation is not "OR" || node.Child1.Operation is not "NOT" ||
+            node.Child2.Operation is not "NOT") return node;
+
+        node = node.Child1.Child1.Term == node.Child2.Child1.Term
+            ? ExpressionTreeNode.CreateNot(node.Child1.Child1)
             : ExpressionTreeNode.CreateAllNode();
 
         count++;
@@ -232,16 +218,10 @@ public class EtQueryParser
     /// <returns></returns>
     private static ExpressionTreeNode HandleAllNode(ExpressionTreeNode? node, ref int count)
     {
-        if (node is null)
-        {
-            return null;
-        }
+        if (node is null) return null;
 
-        if (node.Child1?.Operation != "ALL" && node.Child2?.Operation != "ALL")
-        {
-            return node;
-        }
-       
+        if (node.Child1?.Operation is not "ALL" && node.Child2?.Operation is not "ALL") return node;
+
         var otherNode = node.Child1.Operation == "ALL" ? node.Child2 : node.Child1;
 
         node = node.Operation switch
@@ -265,16 +245,10 @@ public class EtQueryParser
     /// <returns></returns>
     private static ExpressionTreeNode HandleZeroNode(ExpressionTreeNode? node, ref int count)
     {
-        if (node is null)
-        {
-            return null;
-        }
+        if (node is null) return null;
 
-        if (node.Child1?.Operation != "ZERO" && node.Child2?.Operation != "ZERO")
-        {
-            return node;
-        }
-        
+        if (node.Child1?.Operation is not "ZERO" && node.Child2?.Operation is not "ZERO") return node;
+
         var otherNode = node.Child1.Operation == "ZERO" ? node.Child2 : node.Child1;
 
         node = node.Operation switch

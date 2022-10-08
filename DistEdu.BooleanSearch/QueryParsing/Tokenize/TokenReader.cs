@@ -1,56 +1,54 @@
-﻿namespace DistEdu.BooleanSearch.QueryParsing.Tokenize;
+﻿using DistEdu.Common.Extensions;
+using SearchOption = DistEdu.Index.SearchOption;
 
-public class TokenReader
+namespace DistEdu.BooleanSearch.QueryParsing.Tokenize;
+
+public sealed class TokenReader
 {
-    private const char AND = '&';
-    private const char OR = '|';
-    private const char NOT = '!';
-    private const char OPEN_BRACKET = '(';
-    private const char CLOSE_BRACKET = ')';
-    private readonly string _query;
+    private readonly ReadOnlyMemory<char> _query;
     private char _currentChar = char.MaxValue;
     private int _position;
 
     public TokenReader(string query)
     {
-        _query = query;
+        _query = query.AsMemory();
     }
 
-    public Token Token { get; private set; } = Token.EOL;
+    public Token Token { get; private set; } = Token.Eol;
 
-    public Token PrevToken { get; private set; } = Token.EOL;
+    public Token PrevToken { get; private set; } = Token.Eol;
 
-    public string Term { get; private set; }
+    public string Term { get; private set; } = string.Empty;
 
     public void NextToken()
     {
         PrevToken = Token;
 
-        if (_currentChar == char.MaxValue) NextChar();
+        if (_currentChar is char.MaxValue) NextChar();
 
         SkipWhitespaces();
 
         switch (_currentChar)
         {
             case char.MinValue:
-                Token = Token.EOL;
+                Token = Token.Eol;
                 return;
 
-            case AND:
+            case (char)Token.And:
                 NextChar();
-                if (_currentChar == AND) NextChar();
+                if (_currentChar == (char)Token.And) NextChar();
 
                 Token = Token.And;
                 return;
 
-            case OR:
+            case (char)Token.Or:
                 NextChar();
-                if (_currentChar == OR) NextChar();
+                if (_currentChar == (char)Token.Or) NextChar();
 
                 Token = Token.Or;
                 return;
 
-            case NOT:
+            case (char)Token.Not:
                 // We consider space(s) between term and NOT as AND operation.
                 if (PrevToken == Token.Term)
                 {
@@ -62,18 +60,18 @@ public class TokenReader
                 Token = Token.Not;
                 return;
 
-            case OPEN_BRACKET:
+            case (char)Token.OpenBracket:
                 NextChar();
                 Token = Token.OpenBracket;
                 return;
 
-            case CLOSE_BRACKET:
+            case (char)Token.CloseBracket:
                 NextChar();
                 Token = Token.CloseBracket;
                 return;
         }
 
-        if (char.IsLetterOrDigit(_currentChar) || SearchOption.AcceptableSymbols.Contains(_currentChar))
+        if (char.IsLetterOrDigit(_currentChar) || SearchOption.ContainsAcceptableSymbols(_currentChar))
         {
             // We consider space(s) between terms as AND operation.
             if (PrevToken == Token.Term)
@@ -85,11 +83,12 @@ public class TokenReader
 
             var i = _position - 1;
 
-            while ((char.IsLetterOrDigit(_currentChar) || SearchOption.AcceptableSymbols.Contains(_currentChar))
+            while ((char.IsLetterOrDigit(_currentChar) || SearchOption.ContainsAcceptableSymbols(_currentChar))
                    && _currentChar != char.MinValue)
                 NextChar();
 
-            Term = _query.Substring(i, _position - i - (_currentChar == char.MinValue ? 0 : 1)).ToLower();
+            var term = _query.Span.Slice(i, _position - i - (_currentChar == char.MinValue ? 0 : 1));
+            Term = term.Lower();
             Token = Token.Term;
 
             return;
@@ -106,7 +105,7 @@ public class TokenReader
             return;
         }
 
-        _currentChar = _query[_position++];
+        _currentChar = _query.Span[_position++];
     }
 
     private void SkipWhitespaces()

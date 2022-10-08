@@ -1,6 +1,6 @@
 using FB2Library;
 
-namespace Common;
+namespace DistEdu.Common.Models;
 
 public sealed class Fb2FileWrapper
 {
@@ -11,9 +11,16 @@ public sealed class Fb2FileWrapper
         FileName = fileName;
     }
 
+    public Fb2FileWrapper(int fileIndex, FB2File file, ReadOnlySpan<char> fileName)
+    {
+        FileIndex = fileIndex;
+        File = file;
+        FileName = fileName.ToString();
+    }
+
     public string FileName { get; }
-    
+
     public FB2File File { get; }
-    
+
     public int FileIndex { get; }
 }

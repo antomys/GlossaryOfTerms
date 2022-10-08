@@ -26,7 +26,7 @@ public sealed class SimpleQueryParser
         {
             _tokenReader.NextToken();
 
-            if (_tokenReader.Token == Token.EOL)
+            if (_tokenReader.Token is Token.Eol)
             {
                 if (waitingTermOrNot) throw new Exception("Invalid search string format");
 
