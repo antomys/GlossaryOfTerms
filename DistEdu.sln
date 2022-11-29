@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{6C5F1D38-8430-49F4-ACEB-0F7BFE6F6C72}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6C5F1D38-8430-49F4-ACEB-0F7BFE6F6C72}"
 	ProjectSection(SolutionItems) = preProject
 		Readme.md = Readme.md
 		.gitignore = .gitignore
