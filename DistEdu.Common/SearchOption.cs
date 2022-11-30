@@ -1,4 +1,4 @@
-﻿namespace DistEdu.Index;
+﻿namespace DistEdu.Common;
 
 public static class SearchOption
 {

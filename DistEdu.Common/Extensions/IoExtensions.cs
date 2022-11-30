@@ -34,7 +34,7 @@ public static partial class IoExtensions
         if (Directory.Exists(projectDirectory) is false) throw new DirectoryNotFoundException(nameof(folderName));
 
         var fileNames = Directory
-            .GetFiles(projectDirectory, GetFileExtension(fileExtension), SearchOption.AllDirectories)
+            .GetFiles(projectDirectory, GetFileExtension(fileExtension), System.IO.SearchOption.AllDirectories)
             .ToArray();
 
         return fileNames;

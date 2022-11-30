@@ -41,7 +41,7 @@ public static partial class IoExtensions
         if (File.Exists(file)) File.Delete(file);
 
         await using var createStream = File.Create(file);
-        await JsonSerializer.SerializeAsync(createStream, value);
+        await JsonSerializer.SerializeAsync(createStream, value, SerializerOptions);
         await createStream.DisposeAsync();
 
         Console.WriteLine($"Async Write of File {fileNameDir} has completed.");

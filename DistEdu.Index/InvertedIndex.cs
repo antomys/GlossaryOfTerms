@@ -25,14 +25,17 @@ public sealed class InvertedIndex : Dictionary<string, HashSet<string>>, IIndex
         // make a copy for list just in case...
         var result = new List<string>();
 
-        if (ContainsKey(text)) result.AddRange(this[text]);
+        if (ContainsKey(text))
+        {
+            result.AddRange(this[text]);
+        }
 
         return result;
     }
 
     public IEnumerable<KeyValuePair<string, HashSet<string>>> FindV2(string text)
     {
-        return this.Where(kvp => kvp.Key.Equals(text, StringComparison.Ordinal));
+        return this.Where(kvp => kvp.Key.Equals(text, StringComparison.OrdinalIgnoreCase));
     }
 
     public IEnumerable<KeyValuePair<string, HashSet<string>>> All()

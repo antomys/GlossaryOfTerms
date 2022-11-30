@@ -8,14 +8,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Extensions" />
+        <ProjectReference Include="..\DistEdu.BooleanSearch\DistEdu.BooleanSearch.csproj" />
+        <ProjectReference Include="..\DistEdu.CoordinatedInvertedIndex\DistEdu.CoordinatedInvertedIndex.csproj" />
+        <ProjectReference Include="..\DistEdu.CoordSearch\DistEdu.CoordSearch.csproj" />
+        <ProjectReference Include="..\DistEdu.Dictionary\DistEdu.Dictionary.csproj" />
+        <ProjectReference Include="..\DistEdu.DoubleIndex\DistEdu.DoubleIndex.csproj" />
+        <ProjectReference Include="..\DistEdu.Index\DistEdu.Index.csproj" />
+        <ProjectReference Include="..\DistEdu.Matrix\DistEdu.Matrix.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DistEdu.BooleanSearch\DistEdu.BooleanSearch.csproj" />
-        <ProjectReference Include="..\DistEdu.Dictionary\DistEdu.Dictionary.csproj" />
-        <ProjectReference Include="..\DistEdu.Index\DistEdu.Index.csproj" />
-        <ProjectReference Include="..\DistEdu.Matrix\DistEdu.Matrix.csproj" />
+      <Folder Include="Output" />
+      <Folder Include="Output\CoordinatedIndexService" />
+      <Folder Include="Output\DoubleIndex" />
     </ItemGroup>
 
 </Project>

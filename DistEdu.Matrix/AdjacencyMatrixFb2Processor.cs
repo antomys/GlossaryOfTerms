@@ -24,19 +24,26 @@ public sealed class AdjacencyMatrixFb2Processor : Fb2Processor<ConcurrentDiction
     private static void ProcessMatrixString(string str, Fb2FileWrapper fileWrapper,
         ConcurrentDictionary<string, HashSet<string>> lexemeCollection)
     {
-        if (string.IsNullOrEmpty(str)) return;
-
-        var subStrings = RegexExtensions.LexemeRegex.Matches(str).Select(x => x.Value);
-
-        foreach (var splitStr in subStrings)
+        if (string.IsNullOrEmpty(str))
         {
-            if (string.IsNullOrWhiteSpace(splitStr)) continue;
+            return;
+        }
+
+        var subStrings = RegexExtensions.LexemeRegexV2.Split(str);
+
+        foreach (var splitStr in subStrings.AsSpan())
+        {
+            if (string.IsNullOrWhiteSpace(splitStr))
+            {
+                continue;
+            }
 
             var strToAdd = splitStr.ToLower();
 
             lexemeCollection.AddOrUpdate(fileWrapper.FileName, _ => new HashSet<string> { strToAdd }, (_, hashSet) =>
             {
                 hashSet.Add(strToAdd);
+               
                 return hashSet;
             });
         }
