@@ -39,20 +39,22 @@ public sealed class CoordInverseIndexSearchService
                 continue;
             }
 
-            foreach (var coordToken in coordTokens)
+            foreach (var tmpArr in tmp)
             {
-                var containedCoord = tmp
-                    .FirstOrDefault(x => x.FileName == coordToken.FileName);
+                var containedCoord = coordTokens
+                    .FirstOrDefault(x => x.FileName == tmpArr.FileName);
 
                 if (containedCoord is null)
                 {
+                    tmpArr.IsRemoved = true;
                     continue;
                 }
 
                 var pairs = new HashSet<int>();
+                
                 foreach (var positionIndex in containedCoord.PositionInFile)
                 {
-                    pairs.UnionWith(coordToken.PositionInFile
+                    pairs.UnionWith(tmpArr.PositionInFile
                         .Where(x => x == positionIndex + 1 || x == positionIndex - 1)
                         .Select(x => new[]{positionIndex, x})
                         .SelectMany(x=> x)
@@ -61,19 +63,19 @@ public sealed class CoordInverseIndexSearchService
 
                 if (pairs.Count is 0)
                 {
-                    tmp.Remove(containedCoord);
+                    tmpArr.IsRemoved = true;
                 }
                 else
                 {
-                    containedCoord.PositionInFile = pairs;
+                    tmpArr.Found = pairs;
                 }
             }
-
         }
         
         return tmp
+            .Where(x=> !x.IsRemoved)
             .Select(x =>
-                $"File: {x.FileName}. Phrase: {query}. Indexes: [{string.Join(',', x.PositionInFile.Select(z => z.ToString()))}]")
+                $"File: {x.FileName}. Phrase: {query}. Indexes: [{string.Join(',', x.Found.Select(z => z.ToString()))}]")
             .ToArray();
     }
 }
