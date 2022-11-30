@@ -52,9 +52,9 @@ public sealed class CoordInverseIndexSearchService
 
                 var pairs = new HashSet<int>();
                 
-                foreach (var positionIndex in containedCoord.PositionInFile)
+                foreach (var positionIndex in containedCoord.Collection)
                 {
-                    pairs.UnionWith(tmpArr.PositionInFile
+                    pairs.UnionWith(tmpArr.Collection
                         .Where(x => x == positionIndex + 1 || x == positionIndex - 1)
                         .Select(x => new[]{positionIndex, x})
                         .SelectMany(x=> x)
@@ -75,7 +75,7 @@ public sealed class CoordInverseIndexSearchService
         return tmp
             .Where(x=> !x.IsRemoved)
             .Select(x =>
-                $"File: {x.FileName}. Phrase: {query}. Indexes: [{string.Join(',', x.Found.Select(z => z.ToString()))}]")
+                $"File: {x.FileName}. Phrase: {query}. Indexes: [{string.Join(',', x.Found!.Select(z => z.ToString()))}]")
             .ToArray();
     }
 }
