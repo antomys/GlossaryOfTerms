@@ -37,7 +37,7 @@ class Tree:
         print("Tree, dict path: ", dictionary_path)
         with open(dictionary_path, "r") as target:
             dictionary = target.read().splitlines()
-        self.tree = pytrie.StringTrie(dictionary)
+        self.tree = Trie.StringTrie(dictionary)
 
 
 class Shift_idx:
@@ -87,14 +87,14 @@ def fuzzy_word_search(query, gramm_size, gram, index_path):
 
 def lab4_main(dictionary_path, dir_path, index_path, shift_index_path):
     gramm_size = 2
-    gram = Gramm(False, gramm_size, dictionary_path)
-    # gramms = gram.dict_to_gramm()
-    # write_dictionary(gramms, index_path)
+    gram = Gramm(True, gramm_size, dictionary_path)
+    gramms = gram.dict_to_gramm()
+    write_dictionary(gramms, index_path)
 
-    # shift = Shift_idx(dictionary_path)
-    # shift.word_shifts("hello")
-    # shifts = shift.dict_to_shift()
-    # write_dictionary(shifts, shift_index_path)
+    shift = Shift_idx(dictionary_path)
+    shift.word_shifts("hello")
+    shifts = shift.dict_to_shift()
+    write_dictionary(shifts, shift_index_path)
     query = input("Input a search word with joker...\n")
 
     while query:

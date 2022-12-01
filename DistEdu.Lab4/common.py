@@ -64,10 +64,10 @@ def write_dictionary(dictionary, dictionary_path):
         pass
 
 
-def lab1_main(dictionary_path, dir_path):
+def common_main(dictionary_path, dir_path):
     files_list = get_files_names(dir_path)
 
-    # dictionary = get_dictionary_contents(dictionary_path)
+    dictionary = get_dictionary_contents(dictionary_path)
     dictionary = []
     result = parse_files(files_list, dictionary)
     write_dictionary(dictionary, dictionary_path)

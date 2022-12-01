@@ -55,22 +55,12 @@ class BSBI:
 
     def write_block(self, block_idx):
         with open(self.output_path + "/block" + str(block_idx) + ".dat", "w+b") as file:
-            # for term_str in [
-            #     (0, {"key": 12}),
-            #     (1, {"key": 3}),
-            #     (2, {"key": 43}),
-            #     (4, {"key": 0}),
-            # ]:
-            # print(block)
             for term_str in self.block:
                 term_id = int(term_str[0].split()[0])
                 file_id = int(term_str[0].split()[1])
                 a = (term_id).to_bytes(4, "little")
                 b = (file_id).to_bytes(4, "little")
-                # print("B", b)
                 c = (term_str[1]["frequency"]).to_bytes(4, "little")
-                # print("C", b)
-                # print("sum", a + b + c)
                 file.write(a + b + c)
 
     def write_block_string(self, block_idx):
@@ -82,10 +72,7 @@ class BSBI:
                 file_id = int(term_str[0].split()[1])
                 a = (term_id).to_bytes(4, "little")
                 b = (file_id).to_bytes(4, "little")
-                # print("B", b)
                 c = (term_str[1]["frequency"]).to_bytes(4, "little")
-                # print("C", b)
-                # print("sum", a + b + c)
                 file.write(
                     str(term_id)
                     + " "
@@ -96,7 +83,6 @@ class BSBI:
                 )
 
     def write_termid_term(self):
-
         input(self.output_path + "/termid_term.txt")
         with open(self.output_path + "/termid_term.txt", "w+") as file:
             result = [str(k) + " " + str(v) + "\n" for k, v in self.termid_term.items()]
@@ -143,7 +129,6 @@ class BSBI:
             for x in Path(self.output_path).rglob("*.dat")
             if self.merge_path not in str(x)
         ]
-        # confirm = input("Blocks will be merged to " + dest_path)
         blocks = [open(x, "rb") for x in file_paths]
         out_buffer = []
         dest_file = open(self.merge_path, "w+")
@@ -202,7 +187,6 @@ class BSBI:
     def fill_buffer(self, blocks):
         in_buffer = {}
         for block in blocks:
-            # in_buffer[block.name] = " ".join(list(map(str(self.term_from_bytes(block.read(12))))))
             in_buffer[block.name] = {
                 "tuple": self.term_from_bytes(block.read(12)),
                 "block": block,
@@ -214,7 +198,6 @@ class BSBI:
         if user_input.lower() == "y":
             block_idx = 0
             file_idx = 0
-            # files = (x for x in Path(".").rglob("*.[tT][xX][tT]"))
             files = [x for x in Path(source_dir).rglob("*.[tT][xX][tT]")]
             total_size = sum([os.stat(x).st_size for x in files])
             self.block_size = total_size // 10
@@ -231,7 +214,7 @@ class BSBI:
                 else:
                     self.parse_block(x, file_idx)
                 self.current_size += os.stat(x).st_size
-                print(file_idx)
+                # print(file_idx)
                 file_idx += 1
             self.write_termid_term()
         self.merge_blocks()
@@ -254,12 +237,12 @@ def lab5_main(dictionary_path, dir_path):
     # print(result)
     # result = int.from_bytes(result, "little")
     # print(result)
-    b = BSBI(1000000, "./test_result_files", "merged_blocks.dat")
+    b = BSBI(1000000, "test_result_files", "merged_blocks.dat")
     user_ipt = input("Read [r] or write [w]?... \n")
     if user_ipt == "r":
         b.read("test_result_files/block0.dat")
     elif user_ipt == "w":
-        b.main("./test_files/gutenberg/1/0/0")
+        b.main("test_files")
     else:
         print("Incorrect input")
 
