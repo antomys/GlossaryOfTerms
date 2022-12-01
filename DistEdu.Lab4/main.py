@@ -21,7 +21,7 @@ if __name__ == "__main__":
             paths[path] = constants[path]
     else:
         for path in paths_keys:
-            paths[path] = constants["test_" + path]
+            paths[path] = constants[path]
     try:
         task_num = int(input("Input the task number..."))
     except Exception as e:

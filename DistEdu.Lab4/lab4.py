@@ -1,5 +1,5 @@
 from common import write_dictionary
-from pytrie import SortedStringTrie as Trie
+from pytrie import SortedStringTrie as trie
 import re
 
 
@@ -7,7 +7,7 @@ class Gramm:
     def __init__(self, open_file, gramm_size, dictionary_path):
         self.gramm_size = gramm_size
         if open_file:
-            with open(dictionary_path, "r") as target:
+            with open(dictionary_path, "r", encoding='utf-8') as target:
                 self.dictionary = target.read().splitlines()
 
     def word_gramms(self, word):
@@ -31,18 +31,9 @@ class Gramm:
         gramms = [k + " " + " ".join(v) for k, v in grams.items()]
         return gramms
 
-
-class Tree:
-    def __init__(self, dictionary_path):
-        print("Tree, dict path: ", dictionary_path)
-        with open(dictionary_path, "r") as target:
-            dictionary = target.read().splitlines()
-        self.tree = Trie.StringTrie(dictionary)
-
-
 class Shift_idx:
     def __init__(self, dictionary_path):
-        with open(dictionary_path, "r") as target:
+        with open(dictionary_path, "r", encoding='utf-8') as target:
             self.dictionary = target.read().splitlines()
 
     def word_shifts(self, word):
@@ -95,12 +86,14 @@ def lab4_main(dictionary_path, dir_path, index_path, shift_index_path):
     shift.word_shifts("hello")
     shifts = shift.dict_to_shift()
     write_dictionary(shifts, shift_index_path)
-    query = input("Input a search word with joker...\n")
+
+
+    query = input("> Input a search word with joker\n")
 
     while query:
         result = fuzzy_word_search(query, gramm_size, gram, index_path)
         print(result)
-        query = input("Input a search word with joker...\n")
+        query = input("> Input a search word with joker\n")
 
 
 if __name__ == "__main__":

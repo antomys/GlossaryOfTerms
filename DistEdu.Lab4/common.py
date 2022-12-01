@@ -36,7 +36,7 @@ def parse_files(files_list, dictionary):
 def index_file_to_dictionary(file, dictionary):
     total_words = 0
     local_lines = []
-    with open(file, "r") as o:
+    with open(file, "r", encoding='utf-8') as o:
         for line in o:
             local_lines = re.sub(constants["regex_splitter"], "", line).lower().split()
             for word in local_lines:

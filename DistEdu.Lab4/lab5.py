@@ -18,7 +18,7 @@ class BSBI:
 
     def parse_block(self, current_file, file_idx):
         try:
-            with open(current_file, "r") as f:
+            with open(current_file, "r", encoding='utf-8') as f:
                 for line in f:
                     local_lines = (
                         re.sub(constants["regex_splitter"], "", line).lower().split()
@@ -65,7 +65,7 @@ class BSBI:
 
     def write_block_string(self, block_idx):
         with open(
-            self.output_path + "/block_str" + str(block_idx) + ".txt", "w+"
+            self.output_path + "/block_str" + str(block_idx) + ".txt", "w+", encoding='utf-8'
         ) as file:
             for term_str in self.block:
                 term_id = int(term_str[0].split()[0])
@@ -84,36 +84,38 @@ class BSBI:
 
     def write_termid_term(self):
         input(self.output_path + "/termid_term.txt")
-        with open(self.output_path + "/termid_term.txt", "w+") as file:
+        with open(self.output_path + "/termid_term.txt", "w+", encoding='utf-8') as file:
             result = [str(k) + " " + str(v) + "\n" for k, v in self.termid_term.items()]
             file.writelines(result)
 
     def read_termid_term(self):
         if self.termid_term:
             return
-        with open(self.output_path + "/termid_term.txt", "r") as f:
+        with open(self.output_path + "/termid_term.txt", "r", encoding='utf-8') as f:
             for line in f:
                 key, value = line.split()
                 self.termid_term[int(key)] = value
         print("Red")
 
-    def read(self, filename):
+    def read(self, source_dir):
         if not self.termid_term:
             self.read_termid_term()
         print(sorted(self.termid_term.items())[:10])
+        files = [x for x in Path(source_dir).rglob("*.[dD][aA][tT]")]
         try:
-            with open(filename, "rb") as f:
-                result = ""
-                bytess = f.read(12)
-                while bytess:
-                    (term_id, doc_id, frequency) = self.term_from_bytes(bytess)
+            for x in files:
+                with open(x, "rb") as f:
+                    result = ""
                     bytess = f.read(12)
-                    print(
-                        "{:^20} doc:{:^4} id:{:^4}".format(
-                            self.termid_term[term_id], doc_id, frequency
+                    while bytess:
+                        (term_id, doc_id, frequency) = self.term_from_bytes(bytess)
+                        bytess = f.read(12)
+                        print(
+                            "{:^20} doc:{:^4} id:{:^4}".format(
+                                self.termid_term[term_id], doc_id, frequency
+                            )
                         )
-                    )
-                    print("{:30}".format("_" * 40))
+                        print("{:30}".format("_" * 40))
         except KeyError as ke:
             print("KeyError Exception:", ke)
 
@@ -131,7 +133,7 @@ class BSBI:
         ]
         blocks = [open(x, "rb") for x in file_paths]
         out_buffer = []
-        dest_file = open(self.merge_path, "w+")
+        dest_file = open(self.merge_path, "w+", encoding='utf-8')
         dest_file.write("")
         counter = 0
         in_buffer = self.fill_buffer(blocks)
@@ -178,8 +180,8 @@ class BSBI:
                 head = min(in_buffer.values(), key=lambda x: x["tuple"][0])["tuple"]
                 current_termID = head[0]
             counter = 0
-            print(current_termID)
-            print(list(map(lambda x: x["tuple"], in_buffer.values())), "\n")
+            # print(current_termID)
+            # print(list(map(lambda x: x["tuple"], in_buffer.values())), "\n")
         dest_file.close()
         for x in blocks:
             x.close()
@@ -214,35 +216,18 @@ class BSBI:
                 else:
                     self.parse_block(x, file_idx)
                 self.current_size += os.stat(x).st_size
-                # print(file_idx)
                 file_idx += 1
             self.write_termid_term()
         self.merge_blocks()
 
 
 def lab5_main(dictionary_path, dir_path):
-    # 1. Формуємо по документам пари “termID-docID”
-    #    [ 12 –байтів (4+4+4) записи (термін, документ, частота) ]
-    #    накопичуємо їх в пам’яті
-    #    поки не буде заповнений блок фіксованого розміру.
-    #
-    # 2. Блок інвертується і записується на диск:
-    #    [ Визначимо Block ~ 10M таких записів ]
-    #    Сортуються пари “termID-docID”
-    #    Всі пари “termID-docID” з однаковим ідентифікатором termID
-    #    формують інвертований список
-    #
-    # 3. Зливаємо десяти блоків в один великий
-    # result = (2147483647).to_bytes(4, "little")
-    # print(result)
-    # result = int.from_bytes(result, "little")
-    # print(result)
-    b = BSBI(1000000, "test_result_files", "merged_blocks.dat")
+    b = BSBI(1000000, "result_files", "merged_blocks.dat")
     user_ipt = input("Read [r] or write [w]?... \n")
     if user_ipt == "r":
-        b.read("test_result_files/block0.dat")
+        b.read("result_files")
     elif user_ipt == "w":
-        b.main("test_files")
+        b.main("files")
     else:
         print("Incorrect input")
 
