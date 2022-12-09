@@ -95,6 +95,5 @@ def lab4_main(dictionary_path, dir_path, index_path, shift_index_path):
         print(result)
         query = input("> Input a search word with joker\n")
 
-
 if __name__ == "__main__":
     pass

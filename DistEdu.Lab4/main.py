@@ -1,5 +1,6 @@
 from lab4 import lab4_main
 from lab5 import lab5_main
+from index import task2_main
 from common import common_main
 from utils import constants
 
@@ -29,6 +30,8 @@ if __name__ == "__main__":
     else:
         if task_num == 1:
             common_main(paths["dictionary_path"], paths["dir_path"])
+        elif task_num == 2:
+            task2_main(paths["dictionary_path"], paths["dir_path"], paths["index_path"])
         elif task_num == 4:
             lab4_main(
                 paths["dictionary_path"],
