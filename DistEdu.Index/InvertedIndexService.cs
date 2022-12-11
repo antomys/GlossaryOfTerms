@@ -157,7 +157,10 @@ public sealed class InvertedIndexService : ServiceBase
 
         var groupedIndices = ProcessIndices(invertedIndices);
 
-        foreach (var keyValuePair in groupedIndices) newIndex.Add(keyValuePair.Key, keyValuePair.Value);
+        foreach (var keyValuePair in groupedIndices)
+        {
+            newIndex.Add(keyValuePair.Key, keyValuePair.Value);
+        }
 
         return newIndex;
     }

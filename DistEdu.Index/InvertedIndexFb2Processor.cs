@@ -2,6 +2,7 @@ using DistEdu.Common;
 using DistEdu.Common.Extensions;
 using DistEdu.Common.Models;
 using DistEdu.Index.Interfaces;
+using SearchOption = DistEdu.Common.SearchOption;
 
 namespace DistEdu.Index;
 

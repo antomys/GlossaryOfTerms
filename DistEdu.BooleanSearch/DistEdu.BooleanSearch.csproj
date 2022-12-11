@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DistEdu.Index\DistEdu.Index.csproj"/>
+        <ProjectReference Include="..\DistEdu.Index\DistEdu.Index.csproj" />
     </ItemGroup>
 
 </Project>

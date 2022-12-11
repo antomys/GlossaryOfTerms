@@ -1,5 +1,5 @@
 ﻿using DistEdu.Common.Extensions;
-using SearchOption = DistEdu.Index.SearchOption;
+using SearchOption = DistEdu.Common.SearchOption;
 
 namespace DistEdu.BooleanSearch.QueryParsing.Tokenize;
 

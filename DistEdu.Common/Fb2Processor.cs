@@ -9,7 +9,8 @@ public abstract class Fb2Processor<TCollection>
     private readonly Action<string, Fb2FileWrapper, TCollection> _action;
     protected readonly Fb2FileWrapper Fb2FileWrapper;
 
-    protected Fb2Processor(Fb2FileWrapper fb2FileWrapperWrapper, Action<string, Fb2FileWrapper, TCollection> action)
+    protected Fb2Processor(
+        Fb2FileWrapper fb2FileWrapperWrapper, Action<string, Fb2FileWrapper, TCollection> action)
     {
         Fb2FileWrapper = fb2FileWrapperWrapper;
         _action = action;
